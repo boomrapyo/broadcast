@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เชื่อมต่อเพจ Facebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;800&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --chili: #B3261E;
+    --chili-dark: #7E1B15;
+    --charcoal: #241C1A;
+    --cream: #FFF6EA;
+    --gold: #E3A028;
+    --brown: #5B3A29;
+    --green: #3F7D4F;
+    --line: rgba(36,28,26,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--cream);
+    color: var(--charcoal);
+    font-family: 'Sarabun', sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+  }
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding: 32px;
+    max-width: 460px;
+    width:100%;
+  }
+  h1{
+    font-family:'Kanit',sans-serif;
+    font-weight:800;
+    font-size: 22px;
+    margin: 0 0 6px;
+  }
+  .sub{
+    color: var(--brown);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .fb-btn{
+    width:100%;
+    background: #1877F2;
+    color:#fff;
+    border:none;
+    border-radius: 10px;
+    padding: 13px;
+    font-family:'Kanit',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+  }
+  .fb-btn:hover{ background:#1465D8; }
+  .fb-btn:disabled{ background:#a9c6ef; cursor:not-allowed; }
+
+  .status{
+    font-size: 13px;
+    color: var(--brown);
+    margin-top: 14px;
+    min-height: 18px;
+  }
+  .status.err{ color: var(--chili); }
+  .status.ok{ color: var(--green); font-weight:600; }
+
+  .page-item{
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding: 14px;
+    margin-top: 14px;
+  }
+  .page-item .name{
+    font-family:'Kanit',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    margin-bottom: 8px;
+  }
+  .token-box{
+    background: var(--cream);
+    border-radius:8px;
+    padding: 10px;
+    font-size: 12px;
+    word-break: break-all;
+    font-family: monospace;
+    margin-bottom: 8px;
+  }
+  .copy-btn{
+    background: var(--gold);
+    border:none;
+    color: var(--charcoal);
+    font-family:'Kanit',sans-serif;
+    font-weight:700;
+    font-size: 12.5px;
+    padding: 7px 14px;
+    border-radius:7px;
+    cursor:pointer;
+  }
+  .setup-note{
+    background:#FBF0DC;
+    border:1px solid rgba(227,160,40,0.4);
+    border-radius:10px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--brown);
+    margin-bottom: 20px;
+  }
+  .setup-note code{
+    background: rgba(36,28,26,0.08);
+    padding: 1px 5px;
+    border-radius:4px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🌶️ เชื่อมต่อเพจ Facebook</h1>
+  <div class="sub">กดปุ่มด้านล่างเพื่อล็อกอินและเลือกเพจที่จะใช้บรอดแคส</div>
+
+  <div class="setup-note">
+    ⚙️ ก่อนใช้งาน ต้องแก้ค่า <code>YOUR_APP_ID</code> ในโค้ดให้เป็น App ID จริงของ App "broadcast" ก่อนนะคะ (ดูวิธีในข้อความที่แนบมาด้วย)
+  </div>
+
+  <button class="fb-btn" id="loginBtn" onclick="loginWithFacebook()">
+    <span>f</span> เข้าสู่ระบบด้วย Facebook
+  </button>
+  <div class="status" id="status"></div>
+
+  <div id="pagesResult"></div>
+</div>
+
+<script>
+  const APP_ID = "YOUR_APP_ID"; // <-- แก้ตรงนี้เป็น App ID จริง
+
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId: APP_ID,
+      cookie: true,
+      xfbml: false,
+      version: 'v20.0'
+    });
+  };
+
+  (function(d, s, id){
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "https://connect.facebook.net/th_TH/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+
+  function setStatus(msg, cls){
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status' + (cls ? ' ' + cls : '');
+  }
+
+  function loginWithFacebook(){
+    if(APP_ID === "YOUR_APP_ID"){
+      setStatus('กรุณาใส่ App ID จริงในโค้ดก่อนใช้งานค่ะ', 'err');
+      return;
+    }
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    setStatus('กำลังเชื่อมต่อ...');
+
+    FB.login(function(response){
+      if(response.authResponse){
+        setStatus('ล็อกอินสำเร็จ กำลังดึงรายชื่อเพจ...', 'ok');
+        fetchPages();
+      } else {
+        setStatus('ยกเลิกการล็อกอิน หรือไม่ได้รับอนุญาต', 'err');
+        btn.disabled = false;
+      }
+    }, { scope: 'pages_show_list,pages_messaging' });
+  }
+
+  function fetchPages(){
+    FB.api('/me/accounts', function(response){
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = false;
+
+      if(!response || response.error){
+        setStatus('ดึงข้อมูลเพจไม่สำเร็จ: ' + (response.error ? response.error.message : 'unknown error'), 'err');
+        return;
+      }
+      if(!response.data || response.data.length === 0){
+        setStatus('ไม่พบเพจที่เชื่อมกับบัญชีนี้', 'err');
+        return;
+      }
+
+      setStatus(`เจอ ${response.data.length} เพจ ✅`, 'ok');
+      const container = document.getElementById('pagesResult');
+      container.innerHTML = '';
+      response.data.forEach(page => {
+        const div = document.createElement('div');
+        div.className = 'page-item';
+        div.innerHTML = `
+          <div class="name">${page.name}</div>
+          <div class="token-box">${page.access_token}</div>
+          <button class="copy-btn" onclick="copyToken(this, '${page.access_token}')">คัดลอก Page Access Token</button>
+        `;
+        container.appendChild(div);
+      });
+    });
+  }
+
+  function copyToken(btn, token){
+    navigator.clipboard.writeText(token).then(()=>{
+      const original = btn.textContent;
+      btn.textContent = 'คัดลอกแล้ว ✅';
+      setTimeout(()=> btn.textContent = original, 1500);
+    });
+  }
+</script>
+</body>
+</html>
